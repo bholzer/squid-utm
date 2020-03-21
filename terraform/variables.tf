@@ -10,24 +10,25 @@ variable "environment" {
   type    = string
 }
 
-variable "app_name" {
-  default = "utm-squid"
+variable "name" {
+  default = "squid"
   type    = string
 }
 
-variable "app_port" {
+variable "port" {
   default = 3128
   type    = number
 }
 
-variable "fargate_image" {
+variable "squid_image" {
   default = "cloudreach/squid-utm:1.1"
   type    = string
 }
 
 # Additional tags to apply to all tagged resources.
-variable "extra_tags" {
+variable "tags" {
   type = "map"
+  default = {}
 }
 
 variable "internal" {
@@ -35,16 +36,20 @@ variable "internal" {
   type    = bool
 }
 
-variable "fargate_subnets" {
-  default = []
-  type    = list(string)
-}
-
 variable "lb_subnets" {
   default = []
   type    = list(string)
 }
 
+variable "task_subnets" {
+  default = []
+  type    = list(string)
+}
+
+variable "cluster_id" {
+  type = string
+  default = ""
+}
 # How often to check the liveliness of the container
 variable "health_check_interval" {
   default = 30

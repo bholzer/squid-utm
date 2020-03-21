@@ -2,11 +2,12 @@
 ECS cluster
 ======*/
 resource "aws_ecs_cluster" "main" {
-  name = "${var.environment}-${var.app_name}"
+  count = var.cluster_id == "" ? 1 : 0 # Do not create another cluster if one is provided
+  name = "${var.environment}-${var.name}"
 
   tags = merge(
-    var.extra_tags,
-    map("Name", "${var.environment}-${var.app_name}"),
+    var.tags,
+    map("Name", "${var.environment}-${var.name}"),
   )
 }
 
@@ -15,29 +16,29 @@ ECS task definitions
 ======*/
 
 resource "aws_cloudwatch_log_group" "cwlog" {
-  name              = "/ecs/${var.environment}-${var.app_name}"
+  name              = "/ecs/${var.environment}-${var.name}"
   retention_in_days = 30
 
   tags = merge(
-    var.extra_tags,
-    map("Name",  format("%s-%s", var.environment, var.app_name)),
+    var.tags,
+    map("Name",  format("%s-%s", var.environment, var.name)),
   )
 }
 
 
 resource "aws_ecs_task_definition" "squid" {
-  family = "${var.environment}-${var.app_name}"
+  family = "${var.environment}-${var.name}"
 
   container_definitions = <<EOF
 [
   {
-    "name": "${var.app_name}",
-    "image": "${var.fargate_image}",
+    "name": "${var.name}",
+    "image": "${var.squid_image}",
     "essential": true,
     "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-            "awslogs-group": "/ecs/${var.environment}-${var.app_name}",
+            "awslogs-group": "/ecs/${var.environment}-${var.name}",
             "awslogs-region": "${var.aws_region}",
             "awslogs-stream-prefix": "ecs"
         }
@@ -68,8 +69,8 @@ resource "aws_ecs_task_definition" "squid" {
     "portMappings": [
       {
         "protocol": "tcp",
-        "containerPort": ${var.app_port},
-        "hostPort": ${var.app_port}        
+        "containerPort": ${var.port},
+        "hostPort": ${var.port}        
       }
     ],
     "mountPoints" : [],
@@ -85,26 +86,26 @@ EOF
   execution_role_arn = aws_iam_role.ecs_execution_role.arn
   task_role_arn = aws_iam_role.ecs_execution_role.arn
   tags = merge(
-    var.extra_tags,
-    map("Name",  format("%s-%s-task", var.environment, var.app_name)),
+    var.tags,
+    map("Name",  format("%s-%s-task", var.environment, var.name)),
   )
 }
 
 resource "aws_ecs_service" "service" {
-  name = "${var.environment}-${var.app_name}"
-  cluster = aws_ecs_cluster.main.id
+  name = "${var.environment}-${var.name}"
+  cluster = var.cluster_id == "" ? aws_ecs_cluster.main.id : var.cluster_id
   task_definition = "${aws_ecs_task_definition.squid.family}:${aws_ecs_task_definition.squid.revision}"
   launch_type = "FARGATE"
   desired_count = var.desired_count
 
   load_balancer {
     target_group_arn = aws_lb_target_group.main.arn
-    container_name = var.app_name
-    container_port = var.app_port
+    container_name = var.name
+    container_port = var.port
   }
 
   network_configuration {
-    subnets = var.fargate_subnets
+    subnets = var.task_subnets
     security_groups = [aws_security_group.fargate.id]
     assign_public_ip = true
   }

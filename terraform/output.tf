@@ -1,5 +1,5 @@
 output "test_curl" {
-  value = "curl https://www.cloudreach.com --head --proxy ${aws_lb.main.dns_name}:${var.app_port}"
+  value = "curl https://www.cloudreach.com --head --proxy ${aws_lb.main.dns_name}:${var.port}"
 }
 
 output "iam_role" {

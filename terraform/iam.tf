@@ -1,5 +1,5 @@
 resource "aws_iam_role" "ecs_execution_role" {
-  name = format("%s-%s-fargate-role", var.environment, var.app_name)
+  name = format("%s-%s-fargate-role", var.environment, var.name)
   path = "/ecs/"
 
   assume_role_policy = <<EOF
@@ -18,8 +18,8 @@ resource "aws_iam_role" "ecs_execution_role" {
 EOF
 
   tags = merge(
-    var.extra_tags,
-    map("Name", format("%s-%s-fargate-role", var.environment, var.app_name)),
+    var.tags,
+    map("Name", format("%s-%s-fargate-role", var.environment, var.name)),
   )
 }
 

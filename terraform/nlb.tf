@@ -3,7 +3,7 @@
 # }
 
 resource "aws_lb" "main" {
-  name               = format("%s-%s", var.environment, var.app_name)
+  name               = format("%s-%s", var.environment, var.name)
   load_balancer_type = "network"
 
   # launch lbs in public or private subnets based on "internal" variable
@@ -12,15 +12,15 @@ resource "aws_lb" "main" {
 
 
   tags = "${merge(
-    var.extra_tags,
-    map("Name", format("%s-%s-nlb", var.environment, var.app_name)),
+    var.tags,
+    map("Name", format("%s-%s-nlb", var.environment, var.name)),
   )}"
 }
 
 # adds a tcp listener to the load balancer and allows ingress
 resource "aws_lb_listener" "app_port" {
   load_balancer_arn = aws_lb.main.id
-  port              = var.app_port
+  port              = var.port
   protocol          = "TCP"
 
   default_action {
@@ -30,8 +30,8 @@ resource "aws_lb_listener" "app_port" {
 }
 
 resource "aws_lb_target_group" "main" {
-  name                 = format("%s-%s", var.environment, var.app_name)
-  port                 = var.app_port
+  name                 = format("%s-%s", var.environment, var.name)
+  port                 = var.port
   protocol             = "TCP"
   vpc_id               = var.vpc_id
   target_type          = "ip"
@@ -39,14 +39,14 @@ resource "aws_lb_target_group" "main" {
 
   health_check {
     protocol            = "TCP"
-    port                = var.app_port
+    port                = var.port
     interval            = var.health_check_interval
     healthy_threshold   = 2
     unhealthy_threshold = 2
   }
 
   tags = "${merge(
-    var.extra_tags,
-    map("Name", format("%s-%s-tg", var.environment, var.app_name)),
+    var.tags,
+    map("Name", format("%s-%s-tg", var.environment, var.name)),
   )}"
 }
