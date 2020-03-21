@@ -13,3 +13,7 @@ output "nlb_arn" {
 output "nlb_hostname" {
   value = aws_lb.main.dns_name
 }
+
+output "service_name" {
+  value = aws_ecs_service.service.name
+}
