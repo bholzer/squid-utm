@@ -93,7 +93,7 @@ EOF
 
 resource "aws_ecs_service" "service" {
   name = "${var.environment}-${var.name}"
-  cluster = var.cluster_id == "" ? aws_ecs_cluster.main.id : var.cluster_id
+  cluster = var.cluster_id == "" ? aws_ecs_cluster.main[0].id : var.cluster_id
   task_definition = "${aws_ecs_task_definition.squid.family}:${aws_ecs_task_definition.squid.revision}"
   launch_type = "FARGATE"
   desired_count = var.desired_count
